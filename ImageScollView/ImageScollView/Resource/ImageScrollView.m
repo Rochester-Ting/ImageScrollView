@@ -326,6 +326,7 @@
         _windowScrollView.alpha = 0;
         _windowPageControll.alpha = 0;
     } completion:^(BOOL finished) {
+        
         [_windowPageControll removeFromSuperview];
         [_windowScrollView removeFromSuperview];
         [weakSelf timeBegain];
@@ -377,6 +378,8 @@
         
         UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] bk_initWithHandler:^(UIGestureRecognizer *sender, UIGestureRecognizerState state, CGPoint location) {
             [weakSelf hide];
+            [weakSelf.containerView setContentOffset:CGPointMake(weakSelf.containerView.frame.size.width * i, 0) animated:NO];
+            weakSelf.pageControll.currentPage = i;
         }];
         singleTap.numberOfTapsRequired = 1;
         [imageScrollView addGestureRecognizer:singleTap];
@@ -441,6 +444,8 @@
         
         UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] bk_initWithHandler:^(UIGestureRecognizer *sender, UIGestureRecognizerState state, CGPoint location) {
             [weakSelf hide];
+            [weakSelf.containerView setContentOffset:CGPointMake(weakSelf.containerView.frame.size.width * i, 0) animated:NO];
+            weakSelf.pageControll.currentPage = i;
         }];
         singleTap.numberOfTapsRequired = 1;
         [imageScrollView addGestureRecognizer:singleTap];
