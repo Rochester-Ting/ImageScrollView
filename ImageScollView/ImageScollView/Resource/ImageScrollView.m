@@ -7,6 +7,9 @@
 //
 
 #import "ImageScrollView.h"
+#import "UIView+Category.h"
+#import "UIImageView+WebCache.h"
+#import "UIGestureRecognizer+BlocksKit.h"
 
 @interface ImageScrollView () <UIScrollViewDelegate>{
 
@@ -27,6 +30,10 @@
 #define AnimationDuration 0.3 //window的image双击动画效果
 #define MaxZoomScale 2 //最大的放大
 #define MinZoomScale 1 //最小的的放大
+
+#define kWeakSelf __weak typeof(self) weakSelf = self;
+#define kWindowH   [UIScreen mainScreen].bounds.size.height
+#define kWindowW    [UIScreen mainScreen].bounds.size.width
 
 @end
 
@@ -108,8 +115,6 @@
     
     for (UIImageView *imageView in self.icons) {
         imageView.contentMode = imageContentMode;
-//        NSLog(@"icon frame - %@", NSStringFromCGRect(imageView.frame));
-//        NSLog(@"image frame - %@", NSStringFromCGSize(imageView.image.size));
     }
 }
 
@@ -323,10 +328,9 @@
     } completion:^(BOOL finished) {
         [_windowPageControll removeFromSuperview];
         [_windowScrollView removeFromSuperview];
-        [weakSelf timerStart];
+        [weakSelf timeBegain];
     }];
 }
-
 
 - (void)setWebImagesInWindow{
     
