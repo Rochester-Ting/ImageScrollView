@@ -7,9 +7,6 @@
 //  图片轮播器
 
 #import <UIKit/UIKit.h>
-#import "UIView+Category.h"
-#import "UIImageView+WebCache.h"
-#import "UIGestureRecognizer+BlocksKit.h"
 
 @class ImageScrollView;
 
@@ -53,6 +50,16 @@
  */
 - (instancetype)initWithFrame:(CGRect)frame images:(NSArray *)images fromeWeb:(BOOL)isWeb;
 
+/**
+ *  当轮播器显示的时候，开启图片轮播（只有当 timerStart == YES的时候有效）
+ */
+- (void)openTimer;
+
+/**
+ *  当不显示的时候关闭,关闭图片轮播,节约内存
+ */
+- (void)closeTimer;
+
 
 @property (nonatomic, weak) id<ImageScrollViewDelegate> delegate;
 
@@ -63,6 +70,11 @@
 /** 点击图片后能否显示大的滚动图片(默认Yes)  */
 @property (nonatomic, getter=canShowGigImage)BOOL showGigImage;
 
+/** 图片的类型 */
+//UIViewContentModeScaleAspectFit 等比例显示（默认）
+//UIViewContentModeScaleToFill 填充满
+//UIViewContentModeScaleAspectFill 会出现形变，不建议使用
+@property (nonatomic, assign) UIViewContentMode imageContentMode;
 
 
 /** images 一个图片的数组（Web:NSString 或 本地:image）  */

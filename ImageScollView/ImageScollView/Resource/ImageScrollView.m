@@ -27,9 +27,6 @@
 #define AnimationDuration 0.3 //window的image双击动画效果
 #define MaxZoomScale 2 //最大的放大
 #define MinZoomScale 1 //最小的的放大
-#define kWeakSelf __weak typeof(self) weakSelf = self;
-#define kWindowH   [UIScreen mainScreen].bounds.size.height
-#define kWindowW    [UIScreen mainScreen].bounds.size.width
 
 @end
 
@@ -59,6 +56,17 @@
         }
     }
     return self;
+}
+
+
+- (void)openTimer{
+    if (self.timerStart) {
+        [self timeBegain];
+    }
+}
+
+- (void)closeTimer{
+    [self timeCancle];
 }
 
 - (void)setShowGigImage:(BOOL)showGigImage{
@@ -95,27 +103,39 @@
     }
 }
 
+- (void)setImageContentMode:(UIViewContentMode)imageContentMode{
+    _imageContentMode = imageContentMode;
+    
+    for (UIImageView *imageView in self.icons) {
+        imageView.contentMode = imageContentMode;
+//        NSLog(@"icon frame - %@", NSStringFromCGRect(imageView.frame));
+//        NSLog(@"image frame - %@", NSStringFromCGSize(imageView.image.size));
+    }
+}
+
+
 - (void)timeBegain{
+    [self timeCancle];
     _timer = [NSTimer timerWithTimeInterval:Duration target:self selector:@selector(updateTimer) userInfo:nil repeats:YES];
-    [[NSRunLoop currentRunLoop]addTimer:_timer forMode:NSDefaultRunLoopMode];
+    [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSDefaultRunLoopMode];
 }
 
 - (void)timeCancle{
-    _timer = nil;
+    [_timer invalidate];
 }
 
 - (void)updateTimer
 {
     //默认向右切换
     CGFloat location = self.containerView.contentOffset.x;
-    CGFloat index  = location / self.containerView.frame.size.width;
-    CGPoint offSet = CGPointZero;
-    if (index > _count - 1 - 0.01) {
-        offSet = CGPointMake(0, 0);
-    }else{
-        offSet = CGPointMake(location + self.containerView.frame.size.width, 0);
-    }
-    [self.containerView setContentOffset:offSet animated:YES];
+    NSInteger index  = location / self.containerView.frame.size.width;
+
+    if (index == _count - 1)
+        index = 0;
+    else
+        index++;
+    
+    [self.containerView setContentOffset:CGPointMake(self.containerView.frame.size.width * index, 0) animated:YES];
 }
 
 - (void)setWebImages{
@@ -171,7 +191,7 @@
         icon.frame = CGRectMake(i * width, 0, width, height);
         icon.userInteractionEnabled = YES;
         [self.containerView addSubview:icon];
-        
+        NSLog(@"icon frame - %@", NSStringFromCGRect(icon.frame));
         if (_showGigImage) {
             kWeakSelf
             UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] bk_initWithHandler:^(UIGestureRecognizer *sender, UIGestureRecognizerState state, CGPoint location) {
@@ -205,6 +225,16 @@
 - (void)setCurrentPageIndicatorTintColor:(UIColor *)currentPageIndicatorTintColor{
     _pageControll.currentPageIndicatorTintColor = currentPageIndicatorTintColor;
     _windowPageControll.currentPageIndicatorTintColor = currentPageIndicatorTintColor;
+}
+
+
+- (void)layoutSubviews{
+    [super layoutSubviews];
+    
+    for (UIImageView *imageView in self.icons) {
+        NSLog(@"icon frame - %@", NSStringFromCGRect(imageView.frame));
+        NSLog(@"image frame - %@", NSStringFromCGSize(imageView.image.size));
+    }
 }
 
 
@@ -267,7 +297,6 @@
  */
 - (void)showInImageOfIndex:(NSUInteger)index{
     
-    tapDoubleImageIndex = index;
     _windowScrollView.contentOffset = CGPointMake(_windowScrollView.frame.size.width * index, 0);
     _windowPageControll.currentPage = index;
     UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
@@ -322,6 +351,7 @@
         imageScrollView.delegate = self;
         
         UITapGestureRecognizer *doubleTap = [[UITapGestureRecognizer alloc] bk_initWithHandler:^(UIGestureRecognizer *sender, UIGestureRecognizerState state, CGPoint location) {
+            tapDoubleImageIndex = i;
             float offX = kWindowW/2 + (location.x - imageScrollView.width/2);
             float offY = kWindowH/2 + (location.y - imageScrollView.height/2);
             CGPoint offPoint = CGPointMake(offX > 0 ? offX : 0, offY > 0 ? offY : 0);
@@ -385,6 +415,7 @@
         imageScrollView.delegate = self;
         
         UITapGestureRecognizer *doubleTap = [[UITapGestureRecognizer alloc] bk_initWithHandler:^(UIGestureRecognizer *sender, UIGestureRecognizerState state, CGPoint location) {
+            tapDoubleImageIndex = i;
             float offX = kWindowW/2 + (location.x - imageScrollView.width/2);
             float offY = kWindowH/2 + (location.y - imageScrollView.height/2);
             CGPoint offPoint = CGPointMake(offX > 0 ? offX : 0, offY > 0 ? offY : 0);
@@ -427,19 +458,18 @@
 #pragma mark - UIScrollViewDelegate
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView{
-//    NSLog(@"%s",__func__);
 
+    /** 修改pageControll  */
     CGPoint movePoint = scrollView.contentOffset;
     CGFloat index = movePoint.x/scrollView.frame.size.width;
     if (scrollView == self.containerView)
         self.pageControll.currentPage =(int)(index+0.5);
-    else if (scrollView == _windowScrollView){
+    else if (scrollView == _windowScrollView)
         _windowPageControll.currentPage =(int)(index+0.5);
-        tapDoubleImageIndex = (int)(index+0.5);
-    }
     else
         return;
     
+    /** 方法代理  */
     if (self.pageControll.currentPage == self.count - 1) {
         if ([self.delegate respondsToSelector:@selector(imageScrollViewDidAppearWhenEnterLastImage:)]) {
             [self.delegate imageScrollViewDidAppearWhenEnterLastImage:self];
@@ -452,19 +482,18 @@
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
-//    NSLog(@"%s",__func__);
 
+    /** 修改pageControll  */
     CGPoint movePoint = scrollView.contentOffset;
     CGFloat index = movePoint.x/scrollView.frame.size.width;
     if (scrollView == self.containerView)
         self.pageControll.currentPage =(int)(index+0.5);
-    else if (scrollView == _windowScrollView){
+    else if (scrollView == _windowScrollView)
         _windowPageControll.currentPage =(int)(index+0.5);
-        tapDoubleImageIndex = (int)(index+0.5);
-    }
     else
         return;
     
+    /** 方法代理  */
     if (self.pageControll.currentPage == self.count - 1) {
         if ([self.delegate respondsToSelector:@selector(imageScrollViewDidAppearWhenEnterLastImage:)]) {
             [self.delegate imageScrollViewDidAppearWhenEnterLastImage:self];
@@ -480,6 +509,13 @@
 - (UIView *)viewForZoomingInScrollView:(UIScrollView *)tmpScrollView
 {
     if (tmpScrollView != self.containerView  && tmpScrollView != _containerView) {
+//        NSLog(@"%s",__func__);
+//        UIImageView *icon = windowImages[tapDoubleImageIndex];
+//        UIScrollView *scollview = (UIScrollView *)icon.superview;
+//        NSLog(@"windowImages:%@", NSStringFromCGRect(icon.frame));
+//        NSLog(@"scrollview frame:%@", NSStringFromCGRect(scollview.frame));
+//        NSLog(@"scrollview contentsize:%@", NSStringFromCGSize(scollview.contentSize));
+//        NSLog(@"scrollview contentOffset:%@", NSStringFromCGPoint(scollview.contentOffset));
         return windowImages[tapDoubleImageIndex];
     }
     return nil;
@@ -492,6 +528,7 @@
 
 - (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(nullable UIView *)view atScale:(CGFloat)scale{
     if (scale < 1) {
+//        NSLog(@"%s",__func__);
         [scrollView setZoomScale:1 animated:YES];
     }
 }
