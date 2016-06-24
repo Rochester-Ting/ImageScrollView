@@ -69,6 +69,8 @@
 @property (nonatomic, assign) BOOL timerStart;
 /** 点击图片后能否显示大的滚动图片(默认Yes)  */
 @property (nonatomic, getter=canShowGigImage)BOOL showGigImage;
+/** 第一张和最后一张能否切换滚动（默认NO）  */
+@property (nonatomic, getter=isCirculate) BOOL circulate;
 
 /** 图片的类型 */
 //UIViewContentModeScaleAspectFit 等比例显示（默认）

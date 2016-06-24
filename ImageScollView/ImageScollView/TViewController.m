@@ -36,6 +36,7 @@
     view.timerStart = YES;
     view.currentPageIndicatorTintColor = [UIColor redColor];
     view.pageIndicatorTintColor = [UIColor whiteColor];
+    view.circulate = YES;
     
     view.backgroundColor = [UIColor blackColor];
     
